@@ -1,0 +1,13 @@
+model:
+  name: GPTRec-base
+  max_sequence_length: 32
+  hidden_size: 128
+  num_hidden_layers: 2
+  num_attention_heads: 4
+  intermediate_size: 512
+  dropout: 0.1
+  pad_token_id: 0
+  tie_word_embeddings: true
+
+# ID 0 is reserved for padding.
+

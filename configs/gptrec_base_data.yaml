@@ -1,0 +1,10 @@
+dataset:
+  name: KION-GPTRec-base
+  raw_dir: downloads/kion/raw/data_original
+  common_dir: data/interim/kion_common
+  output_dir: data/processed/gptrec_base
+
+split:
+  train_end: "2021-08-08"
+  validation_end: "2021-08-15"
+

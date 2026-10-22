@@ -1,0 +1,75 @@
+# Secrets and local credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+credentials.json
+secrets/
+private/
+
+# IDE and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Package-manager and model caches
+.cache/
+.uv-cache/
+.huggingface/
+hf_cache/
+transformers_cache/
+
+# Raw and derived datasets. Keep only empty directory markers in Git.
+downloads/**
+!downloads/.gitkeep
+data/raw/**
+!data/raw/.gitkeep
+data/interim/**
+!data/interim/.gitkeep
+data/processed/**
+!data/processed/.gitkeep
+
+# Training outputs and experiment trackers
+artifacts/**
+!artifacts/checkpoints/
+!artifacts/checkpoints/.gitkeep
+!artifacts/models/
+!artifacts/models/.gitkeep
+checkpoints/
+outputs/
+logs/**
+!logs/.gitkeep
+wandb/
+mlruns/
+lightning_logs/
+runs/
+
+# Generated reports may contain examples derived from user histories.
+reports/generated/**
+!reports/generated/.gitkeep
+
+# Local notebooks and scratch work
+.ipynb_checkpoints/
+scratch/
+tmp/
+temp/
+
+# Local project diary: decisions, progress and personal notes
+PROJECT_NOTES.md
+
