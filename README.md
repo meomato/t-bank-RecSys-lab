@@ -1,137 +1,135 @@
-# T-Lab RecSys — GPTRec-base
+# T-Lab RecSys: GPTRec и Reward Model
 
-Atomic-item GPT-2 baseline для next-item prediction на датасете KION.
+## Основные результаты
 
-## Результаты
+### GPTRec-base
 
-| Модель | Split | Recall@10 | NDCG@10 |
+| Split | Примеров | Recall@10 | NDCG@10 |
+|---|---:|---:|---:|
+| Validation | — | — | **0.1533** |
+| Test | 129 239 | **0.2399** | **0.1439** |
+
+Лучший checkpoint выбран по `validation NDCG@10` после 10-й эпохи.
+
+### Reward model
+
+| Head | Метрика RM | RM | Константный baseline |
 |---|---|---:|---:|
-| GPTRec-base | test | **0.2399** | **0.1439** |
+| Completion | NLL ↓ | **1.560** | 1.745 |
+| Duration | MAE ↓ | **0.200** | 0.224 |
+| Return | Log loss ↓ | **0.601** | 0.646 |
 
-Метрики посчитаны на 129 239 test-примерах. Лучшим оказался checkpoint после
-10-й эпохи с `validation NDCG@10 = 0.1533`. Таблица будет дополняться результатами
-reward model и RL-дообучения.
+Итоговая функция Reward Model:
 
-## Установка
+
+R = 0.55C + 0.30D + 0.15P(return) - 0.25U,
+
+
+где `C` — ожидаемая completion utility, `D` — нормированная duration utility,
+`P(return)` — вероятность возвращения пользователя, `U` — disagreement ансамбля.
+Релевантность задаётся множеством top-M кандидатов GPTRec, а не отдельным слагаемым
+reward.
+
+## Воспроизведение
+
+Требуются Python 3.11+ и [uv](https://docs.astral.sh/uv/).
 
 ```bash
 uv sync --dev
 ```
 
-## Загрузка данных
+### 1. Данные и GPTRec-base
 
 ```bash
 uv run python scripts/download_kion.py
-```
-
-Скрипт скачивает единый официальный архив KION `data_original.zip` с таблицами
-`interactions`, `users` и `items`, затем распаковывает его в `downloads/kion/raw/`.
-
-## Проверка данных
-
-```bash
-uv run python scripts/inspect_kion.py
-```
-
-Графики, схемы таблиц и HTML-отчёт сохраняются в `reports/generated/kion_eda/`.
-
-## Подготовка датасета GPTRec-base
-
-```bash
 uv run python scripts/prepare_gptrec_base_data.py
-```
-
-Команда создаёт два независимых слоя:
-
-- `data/interim/kion_common/` — interactions, users и items для будущих RM/RL-этапов;
-- `data/processed/gptrec_base/` — atomic item tokens, временные split и vocabulary
-  только для `GPTRec-base`.
-
-`GPTRec-base` получает только `item_token_id`; feedback и metadata в baseline не подаются.
-
-## Проверка Dataset/DataLoader
-
-```bash
-uv run python scripts/check_gptrec_dataloader.py
-```
-
-Команда только собирает последовательности и печатает их количество и формы батчей;
-обучение модели она не запускает.
-
-## Архитектура GPTRec-base
-
-![Архитектура GPTRec-base](docs/images/gptrec-base-architecture.png)
-
-Последовательность atomic item ID превращается в item и positional embeddings, проходит
-через два causal Transformer-блока и проецируется на полный каталог из 15 416 токенов.
-
-### Как строится next-item prediction
-
-![Подробная схема next-item prediction](docs/images/gptrec-base-next-item-flow.png)
-
-Фактически LM head возвращает 15 416 logits: 15 415 объектов каталога и служебный
-`PAD`. Перед ранжированием `PAD` маскируется, поэтому кандидатами остаются 15 415 items.
-Схема показывает inference по последнему непустому hidden state; во время обучения
-causal loss считается по всем допустимым переходам внутри train-последовательности.
-
-## Создание модели
-
-После подготовки датасета:
-
-```bash
-uv run python scripts/build_model.py
-```
-
-Размер vocabulary автоматически читается из `data/processed/gptrec_base/manifest.json`.
-
-## Smoke test обучения
-
-```bash
-uv run python scripts/smoke_train.py
-```
-
-Команда выполняет 50 train-шагов, оценивает длительность полной эпохи и не сохраняет
-checkpoint.
-
-## Обучение GPTRec-base
-
-### Конфигурация эксперимента
-
-| Параметр | Значение |
-|---|---:|
-| Представление объектов | atomic item IDs |
-| Vocabulary | 15 416 токенов, включая `PAD` |
-| Максимальная длина последовательности | 32 |
-| Transformer layers | 2 |
-| Hidden size | 128 |
-| Attention heads | 4 |
-| MLP size | 512 |
-| Dropout | 0.1 |
-| Число параметров | 2 374 144 |
-| Train / evaluation batch size | 32 / 256 |
-| Optimizer | AdamW |
-| Learning rate | 0.0003 |
-| Weight decay | 0.01 |
-| LR schedule | 5% warmup, затем linear decay |
-| Эпохи | максимум 10, фактически 10 |
-| Early stopping | минимум 3 эпохи, patience 2, min delta 0.0001 |
-| Выбор checkpoint | максимум validation NDCG@10 |
-| Seed / устройство | 42 / Apple MPS |
-
-```bash
 uv run python scripts/train_gptrec_base.py
 ```
 
-Модель обучается максимум 10 эпох. После каждой эпохи сохраняется checkpoint и
-считаются `Recall@5/10/20`, `NDCG@5/10/20` на validation. Начиная с третьей эпохи
-обучение останавливается после двух эпох без улучшения `NDCG@10` хотя бы на `0.0001`.
-Лучший checkpoint выбирается по `NDCG@10`, после чего test оценивается один раз.
+Основные результаты сохраняются в:
 
-Результаты:
+- `artifacts/checkpoints/gptrec_base_standard/best.pt`;
+- `reports/generated/gptrec_base_standard/result.json`;
+- `reports/generated/gptrec_base_standard/training_curves.png`.
 
-- `artifacts/checkpoints/gptrec_base_standard/best.pt` — лучшая модель;
-- `reports/generated/gptrec_base_standard/result.json` — итоговые метрики;
-- `reports/generated/gptrec_base_standard/training_curves.png` — графики обучения.
+### 2. Reward model
+
+```bash
+uv run python scripts/prepare_reward_model_data.py
+uv run python scripts/train_reward_model.py
+uv run python scripts/plot_reward_model_training.py
+```
+
+Обучается ансамбль из пяти моделей с разными seed. Checkpoints находятся в
+`artifacts/checkpoints/reward_model/`, итоговые метрики — в
+`reports/generated/reward_model/result.json`.
+
+![Кривые обучения reward model](docs/images/reward-model-training-curves.png)
+
+### 3. Диагностика reward
+
+```bash
+uv run python scripts/audit_reward_model.py
+uv run python scripts/analyze_reward_sensitivity.py \
+  --max-examples 3000 \
+  --candidate-count 50 \
+  --batch-size 64
+```
+
+Аудит проверяет связь reward с популярностью, зависимость от пользовательской истории
+и различие uncertainty между head и tail items. Sensitivity-анализ выполняется на
+validation и не переобучает модели.
+
+![Sensitivity формулы reward](docs/images/reward-model-sensitivity.png)
+
+## Архитектура
+
+### GPTRec-base
+
+![Архитектура GPTRec-base](docs/images/gptrec-base-architecture.png)
+
+GPT-2-подобный causal Transformer получает последовательность atomic item IDs и
+предсказывает следующий объект из каталога. В baseline не используются feedback и
+metadata.
+
+![Next-item prediction](docs/images/gptrec-base-next-item-flow.png)
+
+| Параметр | Значение |
+|---|---:|
+| Максимальная длина | 32 |
+| Transformer layers | 2 |
+| Hidden size | 128 |
+| Attention heads | 4 |
+| Dropout | 0.1 |
+| Параметров | 2 374 144 |
+| Optimizer | AdamW |
+| Learning rate | 0.0003 |
+
+### Reward model
+
+![Упрощённая схема reward model](docs/images/reward-model-overview.svg)
+
+RM использует frozen GPTRec encoder, признаки кандидата, MMoE-блок и три
+probabilistic head: completion, duration и return. Подробная схема, таргеты,
+калибровка и ограничения описаны в
+[документе по архитектуре RM](docs/reward-model-architecture.md).
+
+## Диагностические выводы
+
+- Spearman-корреляция reward с train-популярностью: `0.140`.
+- Среднее изменение reward после перестановки историй: `0.029`.
+- Tail items имеют большую uncertainty: `0.024` против `0.017` у head items.
+- Изменение весов reward сохраняет `95.6–99.0%` состава исходного top-10.
+- Штраф uncertainty почти не меняет порядок, поскольку среднее `U ≈ 0.016`.
+
+## Ограничения
+
+- В KION нет логов показов, поэтому selection bias нельзя полностью устранить.
+- Offline reward не доказывает рост реальной удовлетворённости пользователя.
+- Return — лишь прокси долгосрочного engagement.
+- Новые действия policy могут оказаться вне обучающего распределения RM.
+- Итоговый вывод об эффекте RL потребует одновременного анализа relevance, reward,
+  popularity, repetition и multi-step generation.
 
 ## Проверки
 
@@ -139,4 +137,3 @@ uv run python scripts/train_gptrec_base.py
 uv run ruff check .
 uv run pytest
 ```
-

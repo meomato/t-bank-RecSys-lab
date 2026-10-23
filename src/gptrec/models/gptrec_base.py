@@ -111,10 +111,9 @@ class GPTRecBase(nn.Module):
         first_positions = attention_mask.long().argmax(dim=1, keepdim=True)
         return labels.scatter(1, first_positions, -100)
 
-    @torch.no_grad()
     def next_item_logits(self, input_ids: Tensor, attention_mask: Tensor) -> Tensor:
         """Return full-catalog logits at the last non-padding position."""
-        transformer_output = self.model.transformer(
+        output = self.model(
             input_ids=input_ids,
             attention_mask=attention_mask,
             use_cache=False,
@@ -126,9 +125,5 @@ class GPTRecBase(nn.Module):
         if torch.any(last_positions < 0):
             raise ValueError("Every sequence must contain at least one non-padding item")
         batch_indices = torch.arange(input_ids.size(0), device=input_ids.device)
-        last_hidden_states = transformer_output.last_hidden_state[
-            batch_indices,
-            last_positions,
-        ]
-        return self.model.lm_head(last_hidden_states)
+        return output.logits[batch_indices, last_positions]
 

@@ -1,0 +1,19 @@
+paths:
+  events: data/processed/reward_model/events.parquet
+  item_features: data/processed/reward_model/item_features.parquet
+  backbone_checkpoint: artifacts/checkpoints/gptrec_base_standard/best.pt
+  model_config: configs/reward_model.yaml
+  checkpoint_dir: artifacts/checkpoints/reward_model
+  report_dir: reports/generated/reward_model
+
+training:
+  seeds: [42, 43, 44, 45, 46]
+  epochs: 5
+  train_batch_size: 256
+  eval_batch_size: 1024
+  learning_rate: 0.0003
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  patience: 2
+  log_every_steps: 100
+  num_workers: 0

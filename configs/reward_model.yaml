@@ -1,0 +1,10 @@
+model:
+  expert_count: 3
+  expert_hidden_size: 256
+  tower_hidden_size: 128
+  content_type_count: 3
+  content_type_embedding_size: 8
+  item_numeric_feature_dim: 34
+  completion_class_count: 6
+  dropout: 0.1
+  freeze_backbone: true

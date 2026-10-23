@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="820" viewBox="0 0 2048 820" role="img" aria-labelledby="title desc">
+  <title id="title">Упрощённая схема reward model в pipeline GPTRec</title>
+  <desc id="desc">История пользователя и item-кандидат проходят через замороженную GPTRec и MMoE reward model. Три outcome heads и ансамбль образуют conservative reward для RL-дообучения.</desc>
+  <defs>
+    <linearGradient id="gray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f8fafc"/><stop offset="1" stop-color="#e2e8f0"/></linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eff9ff"/><stop offset="1" stop-color="#c9ecff"/></linearGradient>
+    <linearGradient id="yellow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff9df"/><stop offset="1" stop-color="#ffe6a3"/></linearGradient>
+    <linearGradient id="purple" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f0ff"/><stop offset="1" stop-color="#ded1ff"/></linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ebffed"/><stop offset="1" stop-color="#c9f4cf"/></linearGradient>
+    <linearGradient id="orange" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff8eb"/><stop offset="1" stop-color="#ffdfad"/></linearGradient>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#64748b" flood-opacity="0.16"/></filter>
+    <marker id="blue-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0877d1"/></marker>
+    <marker id="green-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#079447"/></marker>
+    <style>
+      .heading{font:700 27px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#0b1746}
+      .label{font:700 21px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#0f172a}
+      .body{font:500 17px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#172554}
+      .small{font:500 15px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#334155}
+      .tiny{font:500 13px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#475569}
+      .math{font:italic 19px Georgia,"Times New Roman",serif;fill:#111827}
+      .panel{stroke-width:2;filter:url(#shadow)}
+      .inner{fill:#ffffff;fill-opacity:.48;stroke-width:1.7}
+      .arrow{fill:none;stroke:#0877d1;stroke-width:3;marker-end:url(#blue-arrow)}
+      .reward-arrow{fill:none;stroke:#079447;stroke-width:3.3;marker-end:url(#green-arrow)}
+      .dash{fill:#ffffff;fill-opacity:.72;stroke:#9cb5d1;stroke-width:1.8;stroke-dasharray:8 6}
+    </style>
+  </defs>
+
+  <rect width="2048" height="820" fill="#ffffff"/>
+  <rect x="12" y="146" width="180" height="312" rx="10" fill="url(#gray)" stroke="#d7dee9" class="panel"/>
+  <text x="102" y="188" text-anchor="middle" class="label">История</text>
+  <text x="102" y="217" text-anchor="middle" class="label">пользователя</text>
+  <rect x="28" y="252" width="148" height="84" rx="9" class="inner" stroke="#879bb6"/>
+  <text x="102" y="288" text-anchor="middle" class="math">[421, 17, 98]</text>
+  <text x="102" y="321" text-anchor="middle" class="small">до 32 item</text>
+  <text x="102" y="375" text-anchor="middle" class="body">только прошлые</text>
+  <text x="102" y="399" text-anchor="middle" class="body">календарные дни</text>
+  <text x="102" y="431" text-anchor="middle" class="tiny">state</text>
+
+  <rect x="224" y="116" width="224" height="372" rx="10" fill="url(#blue)" stroke="#9bd8fa" class="panel"/>
+  <text x="336" y="157" text-anchor="middle" class="label">Item-кандидат</text>
+  <rect x="246" y="190" width="180" height="62" rx="9" class="inner" stroke="#1688df"/>
+  <text x="336" y="229" text-anchor="middle" class="math">action_id = 812</text>
+  <text x="336" y="286" text-anchor="middle" class="body">Тип контента</text>
+  <text x="336" y="316" text-anchor="middle" class="body">Год · популярность</text>
+  <text x="336" y="346" text-anchor="middle" class="body">Top-32 genres</text>
+  <rect x="246" y="380" width="180" height="64" rx="9" class="inner" stroke="#1688df"/>
+  <text x="336" y="407" text-anchor="middle" class="small">type embedding +</text>
+  <text x="336" y="430" text-anchor="middle" class="math">34 numeric features</text>
+  <path d="M192 302 L216 302" class="arrow"/>
+
+  <rect x="484" y="92" width="370" height="420" rx="18" fill="url(#purple)" stroke="#7544d6" stroke-width="4" filter="url(#shadow)"/>
+  <text x="669" y="137" text-anchor="middle" class="heading">Frozen GPTRec-base</text>
+  <text x="669" y="168" text-anchor="middle" class="body">2 × causal Transformer blocks · d = 128</text>
+  <rect x="510" y="202" width="318" height="92" rx="10" class="inner" stroke="#8157dc"/>
+  <text x="669" y="235" text-anchor="middle" class="label">History encoder</text>
+  <text x="669" y="271" text-anchor="middle" class="math">h = last non-PAD state ∈ R¹²⁸</text>
+  <rect x="510" y="318" width="318" height="76" rx="10" class="inner" stroke="#8157dc"/>
+  <text x="669" y="349" text-anchor="middle" class="label">Shared item embedding</text>
+  <text x="669" y="378" text-anchor="middle" class="math">eᵢ ∈ R¹²⁸</text>
+  <rect x="510" y="416" width="318" height="68" rx="10" class="inner" stroke="#8157dc" stroke-dasharray="7 5"/>
+  <text x="669" y="444" text-anchor="middle" class="body">Behavior score</text>
+  <text x="669" y="469" text-anchor="middle" class="math">log P(i | history)</text>
+  <path d="M448 302 L476 302" class="arrow"/>
+
+  <rect x="898" y="112" width="372" height="380" rx="12" fill="url(#yellow)" stroke="#e8b23c" class="panel"/>
+  <text x="1084" y="153" text-anchor="middle" class="heading">Fusion + MMoE</text>
+  <rect x="922" y="182" width="324" height="84" rx="9" class="inner" stroke="#da9613"/>
+  <text x="1084" y="213" text-anchor="middle" class="body">History × item interaction</text>
+  <text x="1084" y="244" text-anchor="middle" class="math">[h, eᵢ, h⊙eᵢ, |h−eᵢ|, metadata]</text>
+  <rect x="932" y="316" width="92" height="72" rx="9" fill="#f0e8ff" stroke="#8157dc" stroke-width="2"/>
+  <rect x="1038" y="316" width="92" height="72" rx="9" fill="#f0e8ff" stroke="#8157dc" stroke-width="2"/>
+  <rect x="1144" y="316" width="92" height="72" rx="9" fill="#f0e8ff" stroke="#8157dc" stroke-width="2"/>
+  <text x="978" y="348" text-anchor="middle" class="body">Expert 1</text><text x="978" y="373" text-anchor="middle" class="math">256</text>
+  <text x="1084" y="348" text-anchor="middle" class="body">Expert 2</text><text x="1084" y="373" text-anchor="middle" class="math">256</text>
+  <text x="1190" y="348" text-anchor="middle" class="body">Expert 3</text><text x="1190" y="373" text-anchor="middle" class="math">256</text>
+  <text x="1084" y="425" text-anchor="middle" class="body">отдельные gates и towers</text>
+  <text x="1084" y="454" text-anchor="middle" class="small">completion · duration · return</text>
+  <path d="M854 302 L890 302" class="arrow"/>
+
+  <rect x="1312" y="98" width="250" height="132" rx="10" fill="url(#blue)" stroke="#1688df" class="panel"/>
+  <text x="1437" y="135" text-anchor="middle" class="label">Completion head</text>
+  <text x="1437" y="168" text-anchor="middle" class="math">6 class probabilities</text>
+  <text x="1437" y="200" text-anchor="middle" class="small">expected completion utility</text>
+  <rect x="1312" y="248" width="250" height="132" rx="10" fill="url(#orange)" stroke="#e59a21" class="panel"/>
+  <text x="1437" y="285" text-anchor="middle" class="label">Duration head</text>
+  <text x="1437" y="318" text-anchor="middle" class="math">Beta(α, β)</text>
+  <text x="1437" y="350" text-anchor="middle" class="small">percentile log-duration</text>
+  <rect x="1312" y="398" width="250" height="112" rx="10" fill="url(#purple)" stroke="#8157dc" class="panel"/>
+  <text x="1437" y="436" text-anchor="middle" class="label">Return head</text>
+  <text x="1437" y="469" text-anchor="middle" class="math">P(return ≤ 7 days)</text>
+  <text x="1437" y="494" text-anchor="middle" class="small">longer-term proxy</text>
+  <path d="M1270 226 C1290 226 1290 164 1304 164" class="arrow"/>
+  <path d="M1270 302 L1304 314" class="arrow"/>
+  <path d="M1270 378 C1290 378 1290 454 1304 454" class="arrow"/>
+
+  <rect x="1604" y="112" width="260" height="380" rx="12" fill="url(#green)" stroke="#3cbd68" class="panel"/>
+  <text x="1734" y="153" text-anchor="middle" class="heading">Ensemble × 5</text>
+  <text x="1734" y="183" text-anchor="middle" class="body">разные seed</text>
+  <rect x="1627" y="212" width="214" height="74" rx="9" class="inner" stroke="#079447"/>
+  <text x="1734" y="243" text-anchor="middle" class="label">Mean outcomes</text>
+  <text x="1734" y="269" text-anchor="middle" class="math">μ = mean(RM₁…RM₅)</text>
+  <rect x="1627" y="305" width="214" height="74" rx="9" class="inner" stroke="#079447"/>
+  <text x="1734" y="336" text-anchor="middle" class="label">Uncertainty</text>
+  <text x="1734" y="362" text-anchor="middle" class="math">σ = std(RM₁…RM₅)</text>
+  <rect x="1627" y="400" width="214" height="68" rx="9" fill="#dff8e4" stroke="#079447" stroke-width="2"/>
+  <text x="1734" y="428" text-anchor="middle" class="label">Safe reward</text>
+  <text x="1734" y="453" text-anchor="middle" class="math">R = .55C + .30D + .15Ret − .25σ</text>
+  <path d="M1562 302 L1596 302" class="reward-arrow"/>
+
+  <rect x="1904" y="160" width="132" height="284" rx="10" fill="url(#green)" stroke="#79d98e" class="panel"/>
+  <text x="1970" y="204" text-anchor="middle" class="label">RL</text>
+  <text x="1970" y="231" text-anchor="middle" class="label">policy</text>
+  <rect x="1918" y="268" width="104" height="92" rx="9" class="inner" stroke="#079447"/>
+  <text x="1970" y="297" text-anchor="middle" class="body">GPTRec</text>
+  <text x="1970" y="323" text-anchor="middle" class="body">fine-tuning</text>
+  <text x="1970" y="348" text-anchor="middle" class="small">next item</text>
+  <text x="1970" y="397" text-anchor="middle" class="small">ограниченная</text>
+  <text x="1970" y="419" text-anchor="middle" class="small">оптимизация</text>
+  <path d="M1864 302 L1896 302" class="reward-arrow"/>
+
+  <rect x="24" y="568" width="1280" height="218" rx="14" class="dash"/>
+  <text x="48" y="610" class="heading">Что именно учит reward model</text>
+  <rect x="54" y="644" width="248" height="102" rx="10" fill="url(#blue)" stroke="#1688df" stroke-width="1.7"/>
+  <text x="178" y="679" text-anchor="middle" class="label">Краткосрочно</text>
+  <text x="178" y="709" text-anchor="middle" class="body">completion + duration</text>
+  <text x="178" y="732" text-anchor="middle" class="tiny">conditional satisfaction</text>
+  <text x="330" y="704" class="heading">+</text>
+  <rect x="370" y="644" width="248" height="102" rx="10" fill="url(#purple)" stroke="#8157dc" stroke-width="1.7"/>
+  <text x="494" y="679" text-anchor="middle" class="label">Дольше горизонта</text>
+  <text x="494" y="709" text-anchor="middle" class="body">7-day return uplift</text>
+  <text x="494" y="732" text-anchor="middle" class="tiny">центрируется по baseline</text>
+  <text x="646" y="704" class="heading">−</text>
+  <rect x="686" y="644" width="248" height="102" rx="10" fill="url(#orange)" stroke="#e59a21" stroke-width="1.7"/>
+  <text x="810" y="679" text-anchor="middle" class="label">Осторожность</text>
+  <text x="810" y="709" text-anchor="middle" class="body">ensemble disagreement</text>
+  <text x="810" y="732" text-anchor="middle" class="tiny">OOD penalty</text>
+  <path d="M962 695 L1000 695" class="reward-arrow"/>
+  <rect x="1008" y="644" width="264" height="102" rx="10" fill="url(#green)" stroke="#079447" stroke-width="1.7"/>
+  <text x="1140" y="679" text-anchor="middle" class="label">Conservative reward</text>
+  <text x="1140" y="709" text-anchor="middle" class="body">один scalar для RL</text>
+  <text x="1140" y="732" text-anchor="middle" class="tiny">веса задаются конфигурацией</text>
+
+  <rect x="1342" y="568" width="682" height="218" rx="14" class="dash"/>
+  <text x="1368" y="610" class="heading">Что остаётся на уровне policy</text>
+  <rect x="1374" y="644" width="196" height="102" rx="10" fill="url(#gray)" stroke="#879bb6" stroke-width="1.7"/>
+  <text x="1472" y="679" text-anchor="middle" class="label">Support</text>
+  <text x="1472" y="709" text-anchor="middle" class="body">top-M candidates</text>
+  <text x="1472" y="732" text-anchor="middle" class="tiny">не уходить далеко OOD</text>
+  <rect x="1592" y="644" width="196" height="102" rx="10" fill="url(#yellow)" stroke="#e8b23c" stroke-width="1.7"/>
+  <text x="1690" y="679" text-anchor="middle" class="label">Стабильность</text>
+  <text x="1690" y="709" text-anchor="middle" class="body">KL к GPTRec</text>
+  <text x="1690" y="732" text-anchor="middle" class="tiny">fallback при риске</text>
+  <rect x="1810" y="644" width="190" height="102" rx="10" fill="url(#green)" stroke="#3cbd68" stroke-width="1.7"/>
+  <text x="1905" y="679" text-anchor="middle" class="label">Beyond accuracy</text>
+  <text x="1905" y="709" text-anchor="middle" class="body">novelty · diversity</text>
+  <text x="1905" y="732" text-anchor="middle" class="tiny">repeat-rate diagnostics</text>
+</svg>

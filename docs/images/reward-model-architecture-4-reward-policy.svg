@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="930" viewBox="0 0 1200 930" role="img" aria-labelledby="title desc">
+  <title id="title">Reward model architecture, part 4: ensemble, reward, and policy safeguards</title>
+  <desc id="desc">Five reward models provide mean predictions and epistemic uncertainty; calibrated utilities form a conservative reward for constrained reinforcement learning.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker>
+    <style>
+      .title { font:700 28px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; fill:#0f172a }
+      .section { font:600 18px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; fill:#334155 }
+      .label { font:600 17px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; fill:#0f172a }
+      .body { font:400 14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; fill:#475569 }
+      .mono { font:500 14px ui-monospace,SFMono-Regular,Menlo,monospace; fill:#334155 }
+      .seed { fill:#f5f3ff; stroke:#c4b5fd; stroke-width:2 }
+      .aggregate { fill:#eff6ff; stroke:#93c5fd; stroke-width:2 }
+      .reward { fill:#ecfdf5; stroke:#86efac; stroke-width:2 }
+      .constraint { fill:#fff7ed; stroke:#fdba74; stroke-width:2 }
+      .policy { fill:#ffffff; stroke:#64748b; stroke-width:2.2 }
+      .line { fill:none; stroke:#334155; stroke-width:2.2; marker-end:url(#arrow) }
+      .dashed { fill:none; stroke:#64748b; stroke-width:2; stroke-dasharray:7 5; marker-end:url(#arrow) }
+      .soft { fill:none; stroke:#94a3b8; stroke-width:1.6 }
+    </style>
+  </defs>
+
+  <rect width="1200" height="930" fill="#f8fafc"/>
+  <path d="M600 0 L600 32" class="soft"/>
+  <text x="60" y="60" class="title">4 · Ensemble, conservative reward и RL-policy</text>
+  <text x="60" y="90" class="body">Одинаковая архитектура обучается пять раз; disagreement служит штрафом за незнакомые state–item пары.</text>
+
+  <text x="60" y="136" class="section">Пять независимо обученных RM</text>
+  <rect x="70" y="158" width="190" height="92" rx="15" class="seed"/>
+  <text x="165" y="193" text-anchor="middle" class="label">RM seed 1</text><text x="165" y="222" text-anchor="middle" class="body">другая init</text>
+  <rect x="287" y="158" width="190" height="92" rx="15" class="seed"/>
+  <text x="382" y="193" text-anchor="middle" class="label">RM seed 2</text><text x="382" y="222" text-anchor="middle" class="body">другая init</text>
+  <rect x="505" y="158" width="190" height="92" rx="15" class="seed"/>
+  <text x="600" y="193" text-anchor="middle" class="label">RM seed 3</text><text x="600" y="222" text-anchor="middle" class="body">другой shuffle</text>
+  <rect x="723" y="158" width="190" height="92" rx="15" class="seed"/>
+  <text x="818" y="193" text-anchor="middle" class="label">RM seed 4</text><text x="818" y="222" text-anchor="middle" class="body">другая init</text>
+  <rect x="940" y="158" width="190" height="92" rx="15" class="seed"/>
+  <text x="1035" y="193" text-anchor="middle" class="label">RM seed 5</text><text x="1035" y="222" text-anchor="middle" class="body">другой shuffle</text>
+  <path d="M600 32 C600 118 165 112 165 150" class="line"/>
+  <path d="M600 32 C600 112 382 112 382 150" class="line"/>
+  <path d="M600 32 L600 150" class="line"/>
+  <path d="M600 32 C600 112 818 112 818 150" class="line"/>
+  <path d="M600 32 C600 118 1035 112 1035 150" class="line"/>
+
+  <rect x="230" y="304" width="340" height="102" rx="16" class="aggregate"/>
+  <text x="400" y="338" text-anchor="middle" class="label">Средние predictions</text>
+  <text x="400" y="366" text-anchor="middle" class="mono">μ = mean(RM₁ … RM₅)</text>
+  <text x="400" y="390" text-anchor="middle" class="body">Основная оценка outcomes</text>
+  <rect x="630" y="304" width="340" height="102" rx="16" class="aggregate"/>
+  <text x="800" y="338" text-anchor="middle" class="label">Epistemic uncertainty</text>
+  <text x="800" y="366" text-anchor="middle" class="mono">σ = std(RM₁ … RM₅)</text>
+  <text x="800" y="390" text-anchor="middle" class="body">Насколько модели не согласны</text>
+  <path d="M165 250 C165 278 300 274 350 304" class="line"/>
+  <path d="M382 250 L400 296" class="line"/>
+  <path d="M600 250 C600 280 475 274 450 304" class="line"/>
+  <path d="M600 250 C600 280 725 274 750 304" class="line"/>
+  <path d="M818 250 L800 296" class="line"/>
+  <path d="M1035 250 C1035 278 900 274 850 304" class="line"/>
+
+  <text x="60" y="466" class="section">Сборка scalar reward</text>
+  <rect x="130" y="490" width="940" height="170" rx="18" class="reward"/>
+  <text x="600" y="526" text-anchor="middle" class="label">Calibrated outcome utility</text>
+  <text x="600" y="556" text-anchor="middle" class="mono">U = 0.55 · completion + 0.30 · duration + 0.15 · p_return</text>
+  <text x="600" y="591" text-anchor="middle" class="label">Conservative reward</text>
+  <text x="600" y="621" text-anchor="middle" class="mono">R = U − 0.25 · epistemic_uncertainty</text>
+  <text x="600" y="647" text-anchor="middle" class="body">Relevance обеспечивается top-M candidate set исходной GPTRec</text>
+  <path d="M400 406 C400 452 520 448 540 482" class="line"/>
+  <path d="M800 406 C800 452 680 448 660 482" class="line"/>
+
+  <text x="60" y="718" class="section">Защитные ограничения и policy-level objectives</text>
+  <rect x="70" y="740" width="320" height="108" rx="16" class="constraint"/>
+  <text x="230" y="773" text-anchor="middle" class="label">Support constraints</text>
+  <text x="230" y="801" text-anchor="middle" class="body">Top-M GPTRec candidates · KL penalty</text>
+  <text x="230" y="826" text-anchor="middle" class="body">fallback при низком support</text>
+  <rect x="440" y="740" width="320" height="108" rx="16" class="constraint"/>
+  <text x="600" y="773" text-anchor="middle" class="label">Beyond-accuracy constraints</text>
+  <text x="600" y="801" text-anchor="middle" class="body">novelty · diversity · repeat rate</text>
+  <text x="600" y="826" text-anchor="middle" class="body">не смешиваются с RM labels</text>
+  <rect x="810" y="740" width="320" height="108" rx="16" class="policy"/>
+  <text x="970" y="773" text-anchor="middle" class="label">RL-дообученная GPTRec policy</text>
+  <text x="970" y="801" text-anchor="middle" class="body">Максимизирует safe reward</text>
+  <text x="970" y="826" text-anchor="middle" class="body">Выбирает следующий item</text>
+
+  <path d="M600 660 C600 700 970 692 970 732" class="line"/>
+  <path d="M390 794 L802 794" class="dashed"/>
+  <path d="M760 818 L802 818" class="dashed"/>
+  <path d="M970 848 L970 900" class="line"/>
+  <text x="970" y="922" text-anchor="middle" class="body">recommended action</text>
+</svg>

@@ -1,0 +1,15 @@
+paths:
+  interactions: data/interim/kion_common/interactions.parquet
+  items: data/interim/kion_common/items.parquet
+  vocabulary: data/processed/gptrec_base/item_vocabulary.parquet
+  output_dir: data/processed/reward_model
+
+split:
+  train_end: "2021-08-01"
+  embargo_end: "2021-08-08"
+  calibration_end: "2021-08-11"
+  test_end: "2021-08-15"
+  observation_end: "2021-08-22"
+
+labels:
+  return_horizon_days: 7

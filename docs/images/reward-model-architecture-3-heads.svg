@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">Reward model architecture, part 3: prediction heads</title>
+  <desc id="desc">Task representations are mapped to completion, duration, and seven-day return distributions, while GPTRec provides a separate behavior likelihood.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker>
+    <style>
+      .title { font:700 28px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; fill:#0f172a }
+      .section { font:600 18px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; fill:#334155 }
+      .label { font:600 17px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; fill:#0f172a }
+      .body { font:400 14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; fill:#475569 }
+      .mono { font:500 14px ui-monospace,SFMono-Regular,Menlo,monospace; fill:#334155 }
+      .repr { fill:#ecfdf5; stroke:#86efac; stroke-width:2 }
+      .head { fill:#eff6ff; stroke:#93c5fd; stroke-width:2 }
+      .output { fill:#f5f3ff; stroke:#c4b5fd; stroke-width:2 }
+      .loss { fill:#fff7ed; stroke:#fdba74; stroke-width:2 }
+      .choice { fill:#f8fafc; stroke:#94a3b8; stroke-width:2; stroke-dasharray:7 5 }
+      .line { fill:none; stroke:#334155; stroke-width:2.2; marker-end:url(#arrow) }
+      .dashed { fill:none; stroke:#64748b; stroke-width:2; stroke-dasharray:7 5; marker-end:url(#arrow) }
+      .soft { fill:none; stroke:#94a3b8; stroke-width:1.6 }
+    </style>
+  </defs>
+
+  <rect width="1200" height="900" fill="#f8fafc"/>
+  <path d="M600 0 L600 32" class="soft"/>
+  <text x="60" y="60" class="title">3 · Outcome heads и обучающие цели</text>
+  <text x="60" y="90" class="body">RM предсказывает не абстрактный score, а три интерпретируемых последствия наблюдённого потребления.</text>
+
+  <rect x="70" y="126" width="320" height="70" rx="15" class="repr"/>
+  <text x="230" y="155" text-anchor="middle" class="label">Completion representation</text>
+  <text x="230" y="180" text-anchor="middle" class="mono">z꜀ ∈ R¹²⁸</text>
+  <rect x="440" y="126" width="320" height="70" rx="15" class="repr"/>
+  <text x="600" y="155" text-anchor="middle" class="label">Duration representation</text>
+  <text x="600" y="180" text-anchor="middle" class="mono">zᴅ ∈ R¹²⁸</text>
+  <rect x="810" y="126" width="320" height="70" rx="15" class="repr"/>
+  <text x="970" y="155" text-anchor="middle" class="label">Return representation</text>
+  <text x="970" y="180" text-anchor="middle" class="mono">zʀ ∈ R¹²⁸</text>
+  <path d="M600 32 C600 95 230 88 230 118" class="line"/>
+  <path d="M600 32 L600 118" class="line"/>
+  <path d="M600 32 C600 95 970 88 970 118" class="line"/>
+
+  <text x="60" y="248" class="section">Три probabilistic heads</text>
+  <rect x="70" y="270" width="320" height="186" rx="16" class="head"/>
+  <text x="230" y="305" text-anchor="middle" class="label">Categorical completion head</text>
+  <text x="230" y="333" text-anchor="middle" class="mono">Linear 128 → 6 logits</text>
+  <text x="230" y="360" text-anchor="middle" class="body">0 · 1–10 · 11–50 · 51–89</text>
+  <text x="230" y="383" text-anchor="middle" class="body">90–99 · 100%</text>
+  <text x="230" y="414" text-anchor="middle" class="mono">softmax → P(class)</text>
+  <text x="230" y="439" text-anchor="middle" class="body">Loss: cross-entropy</text>
+
+  <rect x="440" y="270" width="320" height="186" rx="16" class="head"/>
+  <text x="600" y="305" text-anchor="middle" class="label">Duration distribution head</text>
+  <text x="600" y="333" text-anchor="middle" class="mono">Linear 128 → α, β</text>
+  <text x="600" y="360" text-anchor="middle" class="body">softplus + 1 гарантирует α,β &gt; 1</text>
+  <text x="600" y="391" text-anchor="middle" class="mono">u_duration ~ Beta(α, β)</text>
+  <text x="600" y="416" text-anchor="middle" class="body">Target: percentile log-duration</text>
+  <text x="600" y="439" text-anchor="middle" class="body">Loss: negative log-likelihood</text>
+
+  <rect x="810" y="270" width="320" height="186" rx="16" class="head"/>
+  <text x="970" y="305" text-anchor="middle" class="label">7-day return head</text>
+  <text x="970" y="333" text-anchor="middle" class="mono">Linear 128 → 1 logit</text>
+  <text x="970" y="364" text-anchor="middle" class="mono">sigmoid → P(return₇d)</text>
+  <text x="970" y="395" text-anchor="middle" class="body">Следующий активный день ≤ 7 дней</text>
+  <text x="970" y="426" text-anchor="middle" class="body">Loss: binary cross-entropy</text>
+
+  <path d="M230 196 L230 262" class="line"/>
+  <path d="M600 196 L600 262" class="line"/>
+  <path d="M970 196 L970 262" class="line"/>
+
+  <rect x="70" y="510" width="320" height="112" rx="16" class="output"/>
+  <text x="230" y="543" text-anchor="middle" class="label">Completion utility</text>
+  <text x="230" y="571" text-anchor="middle" class="mono">Σ P(k) · vₖ</text>
+  <text x="230" y="599" text-anchor="middle" class="body">v = [0, .055, .305, .70, .945, 1]</text>
+
+  <rect x="440" y="510" width="320" height="112" rx="16" class="output"/>
+  <text x="600" y="543" text-anchor="middle" class="label">Duration utility</text>
+  <text x="600" y="571" text-anchor="middle" class="mono">E[Beta] = α / (α + β)</text>
+  <text x="600" y="599" text-anchor="middle" class="body">Нормировано в диапазон 0…1</text>
+
+  <rect x="810" y="510" width="320" height="112" rx="16" class="output"/>
+  <text x="970" y="543" text-anchor="middle" class="label">Return probability</text>
+  <text x="970" y="571" text-anchor="middle" class="mono">p_return = sigmoid(logit)</text>
+  <text x="970" y="599" text-anchor="middle" class="body">Позже центрируется по baseline</text>
+
+  <path d="M230 456 L230 502" class="line"/>
+  <path d="M600 456 L600 502" class="line"/>
+  <path d="M970 456 L970 502" class="line"/>
+
+  <rect x="120" y="678" width="410" height="112" rx="16" class="choice"/>
+  <text x="325" y="712" text-anchor="middle" class="label">Отдельный GPTRec behavior score</text>
+  <text x="325" y="740" text-anchor="middle" class="mono">log P(action_id | history)</text>
+  <text x="325" y="768" text-anchor="middle" class="body">Используется для top-M candidates, не входит в reward</text>
+
+  <rect x="670" y="678" width="410" height="112" rx="16" class="loss"/>
+  <text x="875" y="712" text-anchor="middle" class="label">Итоговый training loss</text>
+  <text x="875" y="742" text-anchor="middle" class="mono">L = L_completion + L_duration + L_return</text>
+  <text x="875" y="768" text-anchor="middle" class="body">Каждый head получает собственный supervision</text>
+
+  <path d="M390 566 C470 646 590 626 670 710" class="dashed"/>
+  <path d="M760 566 C785 620 830 626 850 670" class="dashed"/>
+  <path d="M970 622 C970 644 930 648 910 670" class="dashed"/>
+
+  <rect x="300" y="832" width="600" height="52" rx="14" class="output"/>
+  <text x="600" y="864" text-anchor="middle" class="label">Выход RM: completion utility · duration utility · p(return) · behavior score</text>
+  <path d="M230 622 C230 800 430 796 500 824" class="line"/>
+  <path d="M600 622 L600 824" class="line"/>
+  <path d="M970 622 C970 800 770 796 700 824" class="line"/>
+  <path d="M600 884 L600 900" class="soft"/>
+</svg>

@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="820" viewBox="0 0 1200 820" role="img" aria-labelledby="title desc">
+  <title id="title">Reward model architecture, part 1: inputs and fusion</title>
+  <desc id="desc">User history, candidate item, and item metadata are encoded and fused into a 256-dimensional shared representation.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+    <style>
+      .title { font: 700 28px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; fill:#0f172a }
+      .section { font: 600 18px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; fill:#334155 }
+      .label { font: 600 17px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; fill:#0f172a }
+      .body { font: 400 14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; fill:#475569 }
+      .mono { font: 500 14px ui-monospace,SFMono-Regular,Menlo,monospace; fill:#334155 }
+      .box { fill:#ffffff; stroke:#cbd5e1; stroke-width:2 }
+      .input { fill:#eff6ff; stroke:#93c5fd; stroke-width:2 }
+      .encoder { fill:#f5f3ff; stroke:#c4b5fd; stroke-width:2 }
+      .fusion { fill:#ecfdf5; stroke:#86efac; stroke-width:2 }
+      .projection { fill:#fff7ed; stroke:#fdba74; stroke-width:2 }
+      .line { fill:none; stroke:#334155; stroke-width:2.2; marker-end:url(#arrow) }
+      .soft { fill:none; stroke:#94a3b8; stroke-width:1.6 }
+    </style>
+  </defs>
+
+  <rect width="1200" height="820" fill="#f8fafc"/>
+  <text x="60" y="54" class="title">1 · Входы, энкодеры и fusion</text>
+  <text x="60" y="84" class="body">Для каждого наблюдённого действия строится пара: состояние пользователя h и item-кандидат i.</text>
+
+  <text x="60" y="130" class="section">Входные признаки</text>
+  <rect x="60" y="150" width="330" height="128" rx="16" class="input"/>
+  <text x="225" y="184" text-anchor="middle" class="label">История пользователя</text>
+  <text x="225" y="211" text-anchor="middle" class="body">До 32 item из строго прошлых дней</text>
+  <text x="225" y="235" text-anchor="middle" class="mono">input_ids + attention_mask</text>
+  <text x="225" y="258" text-anchor="middle" class="body">События текущего дня не входят</text>
+
+  <rect x="435" y="150" width="330" height="128" rx="16" class="input"/>
+  <text x="600" y="184" text-anchor="middle" class="label">Действие</text>
+  <text x="600" y="211" text-anchor="middle" class="body">Рекомендуемый item-кандидат</text>
+  <text x="600" y="235" text-anchor="middle" class="mono">action_id</text>
+  <text x="600" y="258" text-anchor="middle" class="body">Atomic item token из GPTRec vocabulary</text>
+
+  <rect x="810" y="150" width="330" height="128" rx="16" class="input"/>
+  <text x="975" y="184" text-anchor="middle" class="label">Metadata кандидата</text>
+  <text x="975" y="211" text-anchor="middle" class="body">content type · release year · popularity</text>
+  <text x="975" y="235" text-anchor="middle" class="body">top-32 genre multi-hot</text>
+  <text x="975" y="258" text-anchor="middle" class="mono">type_id + 34 numeric features</text>
+
+  <text x="60" y="334" class="section">Кодирование</text>
+  <rect x="60" y="354" width="330" height="136" rx="16" class="encoder"/>
+  <text x="225" y="388" text-anchor="middle" class="label">Frozen GPTRec Transformer</text>
+  <text x="225" y="415" text-anchor="middle" class="body">2 causal Transformer blocks</text>
+  <text x="225" y="439" text-anchor="middle" class="body">Берётся последний history state</text>
+  <text x="225" y="466" text-anchor="middle" class="mono">h ∈ R¹²⁸</text>
+
+  <rect x="435" y="354" width="330" height="136" rx="16" class="encoder"/>
+  <text x="600" y="388" text-anchor="middle" class="label">Shared GPTRec item embedding</text>
+  <text x="600" y="415" text-anchor="middle" class="body">Та же embedding table, что у policy</text>
+  <text x="600" y="442" text-anchor="middle" class="mono">eᵢ ∈ R¹²⁸</text>
+
+  <rect x="810" y="354" width="330" height="136" rx="16" class="encoder"/>
+  <text x="975" y="388" text-anchor="middle" class="label">Metadata encoding</text>
+  <text x="975" y="415" text-anchor="middle" class="body">Content-type embedding: 8</text>
+  <text x="975" y="439" text-anchor="middle" class="body">34 numeric: year · popularity · genres</text>
+  <text x="975" y="466" text-anchor="middle" class="mono">mᵢ ∈ R⁴²</text>
+
+  <path d="M225 278 L225 346" class="line"/>
+  <path d="M600 278 L600 346" class="line"/>
+  <path d="M975 278 L975 346" class="line"/>
+
+  <rect x="125" y="566" width="950" height="102" rx="18" class="fusion"/>
+  <text x="600" y="600" text-anchor="middle" class="label">History × item interaction</text>
+  <text x="600" y="628" text-anchor="middle" class="mono">fusion = [h, eᵢ, h ⊙ eᵢ, |h − eᵢ|, type_embedding, numeric_features]</text>
+  <text x="600" y="651" text-anchor="middle" class="body">Совместимость пользователя и item, а не только среднее качество объекта</text>
+
+  <path d="M225 490 C225 532 390 532 480 566" class="line"/>
+  <path d="M600 490 L600 558" class="line"/>
+  <path d="M975 490 C975 532 810 532 720 566" class="line"/>
+
+  <rect x="380" y="706" width="440" height="76" rx="16" class="projection"/>
+  <text x="600" y="737" text-anchor="middle" class="label">Input projection</text>
+  <text x="600" y="762" text-anchor="middle" class="mono">554 → 256 · GELU · LayerNorm · Dropout</text>
+  <path d="M600 668 L600 698" class="line"/>
+  <path d="M600 782 L600 820" class="soft"/>
+</svg>
