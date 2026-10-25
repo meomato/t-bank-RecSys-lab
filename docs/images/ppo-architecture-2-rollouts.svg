@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="940" viewBox="0 0 1200 940" role="img" aria-labelledby="title desc">
+  <title id="title">PPO architecture part 2: candidate policy and two rollout transitions</title>
+  <desc id="desc">The frozen base policy forms top-M candidates, the actor samples an action inside that support, and the state follows either a slate-only or predicted-feedback transition for five steps.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker>
+    <style>
+      .title{font:700 28px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#0f172a}.section{font:600 18px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#334155}.label{font:600 17px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#0f172a}.body{font:400 14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#475569}.mono{font:500 14px ui-monospace,SFMono-Regular,Menlo,monospace;fill:#334155}.state{fill:#f8fafc;stroke:#94a3b8;stroke-width:2}.reference{fill:#eff6ff;stroke:#93c5fd;stroke-width:2}.policy{fill:#f5f3ff;stroke:#c4b5fd;stroke-width:2}.action{fill:#ecfdf5;stroke:#86efac;stroke-width:2}.slate{fill:#ffffff;stroke:#64748b;stroke-width:2.2}.feedback{fill:#fff7ed;stroke:#fdba74;stroke-width:2}.warning{fill:#fef2f2;stroke:#fca5a5;stroke-width:2}.line{fill:none;stroke:#334155;stroke-width:2.2;marker-end:url(#arrow)}.dashed{fill:none;stroke:#64748b;stroke-width:2;stroke-dasharray:7 5;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1200" height="940" fill="#f8fafc"/>
+  <text x="60" y="60" class="title">2 · Candidate policy и два варианта rollout</text>
+  <text x="60" y="90" class="body">Candidate support одинаков; эксперимент меняет только то, что получает следующий state.</text>
+
+  <rect x="60" y="142" width="230" height="118" rx="16" class="state"/>
+  <text x="175" y="179" text-anchor="middle" class="label">Текущий state sₜ</text>
+  <text x="175" y="211" text-anchor="middle" class="mono">history + prefix</text>
+  <text x="175" y="238" text-anchor="middle" class="body">До 32 tokens</text>
+  <rect x="350" y="126" width="300" height="150" rx="16" class="reference"/>
+  <text x="500" y="164" text-anchor="middle" class="label">Frozen base retrieval</text>
+  <text x="500" y="196" text-anchor="middle" class="mono">C(sₜ) = Top-M πbase</text>
+  <text x="500" y="224" text-anchor="middle" class="body">PAD, history и generated items masked</text>
+  <text x="500" y="251" text-anchor="middle" class="body">M = 100 в финальной конфигурации</text>
+  <rect x="710" y="126" width="300" height="150" rx="16" class="policy"/>
+  <text x="860" y="164" text-anchor="middle" class="label">Restricted actor policy</text>
+  <text x="860" y="196" text-anchor="middle" class="mono">log πθ = log_softmax(zθ[C])</text>
+  <text x="860" y="224" text-anchor="middle" class="body">Нормализация только внутри C(sₜ)</text>
+  <text x="860" y="251" text-anchor="middle" class="body">Сохраняется old log-probability</text>
+  <rect x="1045" y="142" width="110" height="118" rx="16" class="action"/>
+  <text x="1100" y="179" text-anchor="middle" class="label">Action</text>
+  <text x="1100" y="211" text-anchor="middle" class="mono">aₜ</text>
+  <text x="1100" y="238" text-anchor="middle" class="body">sample</text>
+  <path d="M290 201 L342 201" class="line"/><path d="M650 201 L702 201" class="line"/><path d="M1010 201 L1037 201" class="line"/>
+
+  <text x="60" y="342" class="section">Одинаковый action, разные state transitions</text>
+  <path d="M1100 260 C1100 326 310 314 310 374" class="line"/>
+  <path d="M1100 260 C1100 326 890 314 890 374" class="line"/>
+
+  <rect x="70" y="382" width="480" height="298" rx="18" class="slate"/>
+  <text x="310" y="424" text-anchor="middle" class="label">Slate mode · основной</text>
+  <text x="310" y="458" text-anchor="middle" class="mono">sₜ₊₁ = append(sₜ, aₜ)</text>
+  <rect x="110" y="492" width="400" height="74" rx="14" class="state"/>
+  <text x="310" y="522" text-anchor="middle" class="body">Следующий Transformer видит выбранный item</text>
+  <text x="310" y="548" text-anchor="middle" class="body">Feedback embedding остаётся нулевым</text>
+  <text x="310" y="607" text-anchor="middle" class="label">Интерпретация горизонта</text>
+  <text x="310" y="638" text-anchor="middle" class="body">H = 5 позиций одного recommendation slate</text>
+  <text x="310" y="662" text-anchor="middle" class="body">Нет реакции пользователя между позициями</text>
+
+  <rect x="650" y="382" width="480" height="298" rx="18" class="feedback"/>
+  <text x="890" y="424" text-anchor="middle" class="label">Feedback mode · sensitivity</text>
+  <text x="890" y="458" text-anchor="middle" class="mono">ŷₜ = RM(sₜ, aₜ)</text>
+  <text x="890" y="486" text-anchor="middle" class="mono">sₜ₊₁ = append(sₜ, aₜ, ŷₜ)</text>
+  <rect x="690" y="520" width="400" height="74" rx="14" class="action"/>
+  <text x="890" y="550" text-anchor="middle" class="body">ŷₜ = expected completion, duration, return</text>
+  <text x="890" y="576" text-anchor="middle" class="body">Policy видит ŷₜ через feedback adapter</text>
+  <text x="890" y="631" text-anchor="middle" class="body">RM следующего шага видит item prefix,</text>
+  <text x="890" y="655" text-anchor="middle" class="body">но не принимает ŷₜ как отдельный input</text>
+
+  <path d="M310 680 C310 728 175 716 175 708" class="dashed"/>
+  <path d="M890 680 C890 728 1025 716 1025 708" class="dashed"/>
+  <rect x="160" y="742" width="880" height="88" rx="16" class="state"/>
+  <text x="600" y="777" text-anchor="middle" class="label">Повторить t = 1 … H, запрещая повтор уже выбранных items</text>
+  <text x="600" y="806" text-anchor="middle" class="mono">trajectory = (s₁, a₁, r₁, …, sH, aH, rH)</text>
+
+  <rect x="160" y="856" width="880" height="58" rx="14" class="warning"/>
+  <text x="600" y="891" text-anchor="middle" class="body">Feedback rollout — learned-model approximation: KION не содержит impressions, skips и propensity logs</text>
+</svg>

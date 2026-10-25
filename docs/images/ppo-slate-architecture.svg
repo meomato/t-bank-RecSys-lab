@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="760" viewBox="0 0 1600 760" role="img" aria-labelledby="title desc">
+  <title id="title">PPO Top-K slate architecture</title>
+  <desc id="desc">GPTRec actor builds a five-item slate inside a frozen base-policy candidate set. A critic estimates values, the reward ensemble scores actions, and PPO uses clipping and KL regularization.</desc>
+  <defs>
+    <linearGradient id="gray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f8fafc"/><stop offset="1" stop-color="#e2e8f0"/></linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eff9ff"/><stop offset="1" stop-color="#c9ecff"/></linearGradient>
+    <linearGradient id="purple" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f0ff"/><stop offset="1" stop-color="#ded1ff"/></linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ebffed"/><stop offset="1" stop-color="#c9f4cf"/></linearGradient>
+    <linearGradient id="orange" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff8eb"/><stop offset="1" stop-color="#ffdfad"/></linearGradient>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#64748b" flood-opacity="0.16"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#0877d1"/></marker>
+    <marker id="green-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#079447"/></marker>
+    <style>
+      .heading{font:700 28px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#0b1746}.label{font:700 20px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#0f172a}.body{font:500 16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#172554}.small{font:500 14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#475569}.math{font:italic 18px Georgia,"Times New Roman",serif;fill:#111827}.panel{stroke-width:2;filter:url(#shadow)}.inner{fill:#fff;fill-opacity:.55;stroke-width:1.6}.line{fill:none;stroke:#0877d1;stroke-width:3;marker-end:url(#arrow)}.reward-line{fill:none;stroke:#079447;stroke-width:3;marker-end:url(#green-arrow)}.dash{fill:none;stroke:#64748b;stroke-width:2;stroke-dasharray:8 6;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1600" height="760" fill="#ffffff"/>
+  <text x="48" y="58" class="heading">PPO Top-K · autoregressive slate без simulated feedback</text>
+
+  <rect x="42" y="112" width="250" height="218" rx="14" fill="url(#gray)" stroke="#94a3b8" class="panel"/>
+  <text x="167" y="154" text-anchor="middle" class="label">State sₜ</text>
+  <text x="167" y="190" text-anchor="middle" class="math">[history, g₁ … gₜ₋₁]</text>
+  <rect x="68" y="222" width="198" height="66" rx="9" class="inner" stroke="#94a3b8"/>
+  <text x="167" y="250" text-anchor="middle" class="body">только item IDs</text>
+  <text x="167" y="275" text-anchor="middle" class="small">до 32 tokens</text>
+
+  <rect x="348" y="96" width="300" height="250" rx="16" fill="url(#purple)" stroke="#7544d6" stroke-width="4" filter="url(#shadow)"/>
+  <text x="498" y="139" text-anchor="middle" class="heading">GPTRec actor</text>
+  <text x="498" y="170" text-anchor="middle" class="body">инициализация из base</text>
+  <rect x="378" y="200" width="240" height="68" rx="9" class="inner" stroke="#8157dc"/>
+  <text x="498" y="229" text-anchor="middle" class="label">Policy head</text>
+  <text x="498" y="254" text-anchor="middle" class="math">πθ(item | sₜ)</text>
+  <rect x="378" y="282" width="240" height="44" rx="9" class="inner" stroke="#8157dc"/>
+  <text x="498" y="310" text-anchor="middle" class="body">Value head Vψ(sₜ)</text>
+  <path d="M292 221 L340 221" class="line"/>
+
+  <rect x="348" y="406" width="300" height="160" rx="14" fill="url(#blue)" stroke="#1688df" class="panel"/>
+  <text x="498" y="447" text-anchor="middle" class="label">Frozen GPTRec-base</text>
+  <text x="498" y="481" text-anchor="middle" class="body">top-M support C(sₜ)</text>
+  <text x="498" y="512" text-anchor="middle" class="body">reference log-probabilities</text>
+  <text x="498" y="542" text-anchor="middle" class="small">PAD и seen items masked</text>
+  <path d="M498 398 L498 354" class="dash"/>
+
+  <rect x="714" y="126" width="260" height="190" rx="14" fill="url(#blue)" stroke="#1688df" class="panel"/>
+  <text x="844" y="167" text-anchor="middle" class="label">Restricted policy</text>
+  <text x="844" y="202" text-anchor="middle" class="math">softmax(zₐ), a ∈ C(sₜ)</text>
+  <rect x="746" y="232" width="196" height="54" rx="9" class="inner" stroke="#1688df"/>
+  <text x="844" y="266" text-anchor="middle" class="body">sample action gₜ</text>
+  <path d="M648 221 L706 221" class="line"/>
+
+  <rect x="1030" y="96" width="270" height="250" rx="14" fill="url(#green)" stroke="#3cbd68" class="panel"/>
+  <text x="1165" y="139" text-anchor="middle" class="heading">RM ensemble × 5</text>
+  <text x="1165" y="178" text-anchor="middle" class="body">C · D · P(return) · U</text>
+  <rect x="1056" y="210" width="218" height="92" rx="9" class="inner" stroke="#079447"/>
+  <text x="1165" y="239" text-anchor="middle" class="label">Normalized reward</text>
+  <text x="1165" y="267" text-anchor="middle" class="math">.55zC + .30zD + .15zP − .25zU</text>
+  <text x="1165" y="291" text-anchor="middle" class="small">fixed base-policy statistics</text>
+  <path d="M974 221 L1022 221" class="reward-line"/>
+
+  <rect x="1354" y="126" width="204" height="190" rx="14" fill="url(#gray)" stroke="#64748b" class="panel"/>
+  <text x="1456" y="167" text-anchor="middle" class="label">Transition</text>
+  <text x="1456" y="206" text-anchor="middle" class="math">sₜ₊₁=[sₜ,gₜ]</text>
+  <text x="1456" y="243" text-anchor="middle" class="body">feedback = 0</text>
+  <text x="1456" y="276" text-anchor="middle" class="small">next slate position</text>
+  <path d="M1300 221 L1346 221" class="line"/>
+  <path d="M1456 316 C1456 376 167 354 167 338" class="dash"/>
+
+  <rect x="222" y="622" width="1156" height="94" rx="14" fill="url(#orange)" stroke="#e59a21" class="panel"/>
+  <text x="800" y="658" text-anchor="middle" class="label">PPO update after H = 5 positions</text>
+  <text x="800" y="691" text-anchor="middle" class="math">L = Lclip + cᵥLvalue − cₕEntropy + β KL(πRL || πbase)</text>
+  <path d="M1165 346 C1165 575 1000 574 1000 614" class="reward-line"/>
+  <path d="M498 566 C498 594 600 594 600 614" class="line"/>
+</svg>

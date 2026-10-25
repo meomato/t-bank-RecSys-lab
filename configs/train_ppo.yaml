@@ -1,0 +1,42 @@
+paths:
+  events: data/processed/reward_model/events.parquet
+  item_features: data/processed/reward_model/item_features.parquet
+  base_checkpoint: artifacts/checkpoints/gptrec_base_standard/best.pt
+  reward_checkpoint_dir: artifacts/checkpoints/reward_model
+  checkpoint_root: artifacts/checkpoints/ppo_final
+  report_root: reports/generated/ppo_final
+
+training:
+  modes: [slate, feedback]
+  seed: 42
+  # 7,429 batches x 64 = 475,456 histories, approximately 15% of train.
+  # Both policies are trained sequentially on the same deterministic data budget.
+  updates: 7429
+  rollout_batch_size: 64
+  candidate_count: 100
+  horizon: 5
+  ppo_epochs: 4
+  minibatch_size: 128
+  learning_rate: 0.00001
+  weight_decay: 0.01
+  gamma: 0.9
+  gae_lambda: 0.95
+  clip_epsilon: 0.2
+  value_coefficient: 0.5
+  entropy_coefficient: 0.01
+  kl_beta: 0.05
+  max_grad_norm: 1.0
+  normalization_batches: 100
+  eval_every_updates: 750
+  # 313 x 64 = at most 20,032 evenly spaced calibration histories.
+  eval_batches: 313
+  # Zero means the complete test split (currently 183,534 histories).
+  test_batches: 0
+  minimum_ndcg_ratio: 0.90
+  num_workers: 0
+
+reward:
+  completion_weight: 0.55
+  duration_weight: 0.30
+  return_weight: 0.15
+  uncertainty_weight: 0.25
